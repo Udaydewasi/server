@@ -3,6 +3,7 @@ import requests
 from pymongo import MongoClient
 import copy
 from bson.objectid import ObjectId
+import os
 
 app = Flask(__name__)
 
@@ -89,5 +90,6 @@ def get_broker_form():
 #  #   return jsonify(user_detail)
  
 if __name__ == "__main__":  
-    app.run(port=6000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 6000)), debug=True)
+
 
