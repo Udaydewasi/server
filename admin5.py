@@ -66,25 +66,19 @@ def send_broker_form():
 
 def send_trade_history(user_email):
     
-    # Fetch the broker list first
     user_data = user_collection.find_one({"gmail": user_email}, {"broker_list": 1, "_id": 0})  
-    
     if not user_data or "broker_list" not in user_data:
         return {"message": "No brokers found for this user."}
     
     broker_list = user_data["broker_list"]  # Extract broker names
-    
-    # Projection to fetch only trade_summary for each broker
     projection = {f"{broker}.trade_summary": 1 for broker in broker_list}  
     projection["_id"] = 0  # Exclude `_id`
-    
-    # Fetch only trade_summary data
-    broker_details = user_collection.find_one({"gmail": user_email}, projection)
-    
-    # Print only the broker names and their trade_summary
-    print(broker_details)
-    
+    broker_details = user_collection.find_one({"gmail": user_email}, projection)    
+
     return broker_details
+
+def send_all_trade_history(user_email):
+    return list(user_collection.find({"gmail": user_email}, {"all_trade_history": 1, "_id" : 0}))
 
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
@@ -123,6 +117,14 @@ def get_trade_history():
    gmail = request.args.get('gmail')
    print(gmail)
    user_detail = send_trade_history(gmail)
+   print(user_detail)
+   return jsonify(user_detail)
+
+@app.route('/get_all_trade_history', methods=['GET'])
+def get_all_trade_history():
+   gmail = request.args.get('gmail')
+   print(gmail)
+   user_detail = send_all_trade_history(gmail)
    print(user_detail)
    return jsonify(user_detail)
  
