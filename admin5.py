@@ -14,15 +14,28 @@ db = client["user_database"]
 user_collection = db["users"]
 broker_form_collection = db['broker form']
     
-def stored_user_info(data) :
+def stored_user_info(data):
+    print(data)
 
-    if isinstance(data, dict): 
-        user_collection.insert_one(data)
-        print("Data inserted successfully")
-    else:
+    if not isinstance(data, dict): 
         print("Error: Data must be a dictionary")
+        return {"error": "Invalid data format"}
 
-    return None
+    # Check if username or gmail already exists
+    existing_user = user_collection.find_one(
+        {"$or": [{"username": data["username"]}, {"gmail": data["gmail"]}]}
+    )
+
+    if existing_user:
+        if existing_user["username"] == data["username"]:
+            return {"error": "Username already exists"}
+        elif existing_user["gmail"] == data["gmail"]:
+            return {"error": "Gmail already exists"}
+
+    # If no duplicates, insert new user
+    user_collection.insert_one(data)
+    print("Data inserted successfully")
+    return {"message": "User registered successfully"}
     
 def stored_broker_info(data):
     broker_name = data.get('broker')
@@ -79,10 +92,8 @@ def handle_admin_form():
     
     received_data = request.get_json()
     print(received_data)
-    datas = copy.deepcopy(received_data) 
-    stored_user_info(received_data)
-    print("datas",datas)
-    return jsonify(datas)
+    response = stored_user_info(received_data)
+    return jsonify(response)
 
 # broker form receiver
 @app.route('/addBrokerForm', methods=['POST'])
