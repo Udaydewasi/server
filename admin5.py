@@ -1,3 +1,4 @@
+from flask_cors import CORS
 from flask import Flask, request, jsonify
 import requests
 from pymongo import MongoClient
@@ -6,6 +7,7 @@ from bson.objectid import ObjectId
 import os
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 client = MongoClient("mongodb+srv://test-yt:DYYAQ8YZ2d1XrdTb@test.ced18.mongodb.net/")
 db = client["user_database"]
@@ -23,7 +25,7 @@ def stored_user_info(data) :
     return None
     
 def stored_broker_info(data):
-    
+    broker_name = data.get('broker')
     info = {
         "phone":data.get("phone"),
         "pin":data.get('pin'),
@@ -34,9 +36,12 @@ def stored_broker_info(data):
     }
 
     user_collection.update_one(
-    {"gmail": data.get('gmail')},  # Match document by `_id`
-    {"$push": {"grow": info}}  # Append new entry into `upstox` array
-)
+        {"gmail": data.get('gmail')},  # Match by email
+        {
+            "$push": {broker_name: info},  # Store broker info
+            "$addToSet": {"broker_list": broker_name}  # Store broker name in a list (avoid duplicates)
+        }
+    )
     return None
 
 def send_user_detail():
