@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins":["http://localhost:3000","https://p-l-page.vercel.app/"]}})
+CORS(app, resources={r"/*": {"origins": ["https://p-l-page.vercel.app", "http://localhost:3000"]}}, supports_credentials=True)
 
 client = MongoClient("mongodb+srv://test-yt:DYYAQ8YZ2d1XrdTb@test.ced18.mongodb.net/")
 db = client["user_database"]
