@@ -89,8 +89,10 @@ def check_user(data):
     # Check password
     if user["password"] != data['password']:
         return "Password is incorrect."
-
-    return user['gmail']
+    if(data['role'] === 'user')
+        return user
+    
+    return "Admin logged in successfully"
 
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
