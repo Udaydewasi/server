@@ -89,7 +89,7 @@ def check_user(data):
     # Check password
     if user["password"] != data['password']:
         return "Password is incorrect."
-    if(data['role'] === 'user')
+    if(data['role'] == 'user')
         return user
     
     return "Admin logged in successfully"
