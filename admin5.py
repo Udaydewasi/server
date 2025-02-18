@@ -46,6 +46,7 @@ def stored_broker_info(data):
         "secret_key": data.get('secret_key'),
         "redirect_uri": data.get('redirect_uri'),
         "gmail_apppassword": data.get('gmail_apppassword'),
+        "visible": "true"
     }
 
     user_collection.update_one(
@@ -98,12 +99,40 @@ def check_user(data):
     
     return "Admin logged in succssfully"
 
+# mark invisble broker and delete the entry from brokerlist
+def mark_broker_false(data):
+    gmail = data.get("gmail")
+    broker_name = data.get("broker")
+
+    if not gmail or not broker_name:
+        return {"error": "Missing gmail or broker_name"}
+
+    user = user_collection.find_one({"gmail": gmail})
+    if not user:
+        return {"error": "User not found"}
+
+    # Remove broker from broker_list
+    new_broker_list = [b for b in user["broker_list"] if b != broker_name]
+
+    if broker_name in user:
+        user_collection.update_one(
+            {"gmail": gmail},
+            {"$set": {f"{broker_name}.0.visible": "false"}}
+        )
+
+    user_collection.update_one(
+        {"gmail": gmail},
+        {"$set": {"broker_list": new_broker_list}}
+    )
+
+    return {"success": True, "message": f"{broker_name} removed from broker_list"}
+
+
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
 def handle_admin_form():
     
     received_data = request.get_json()
-    print(received_data)
     response = stored_user_info(received_data)
     return jsonify(response)
 
@@ -120,30 +149,24 @@ def handle_broker_form():
 @app.route('/get_user_detail', methods=['GET'])
 def get_user_detail():
     user_detail = send_user_detail()
-    print(user_detail)
     return jsonify(user_detail)
 
 @app.route('/get_broker_form', methods=['GET'])
 def get_broker_form():
     broker_form = send_broker_form()
-    print(broker_form)
     return broker_form
 
 # user detail receiver for home page
 @app.route('/get_trade_history', methods=['GET'])
 def get_trade_history():
    gmail = request.args.get('gmail')
-   print(gmail)
    user_detail = send_trade_history(gmail)
-   print(user_detail)
    return jsonify(user_detail)
 
 @app.route('/get_all_trade_history', methods=['GET'])
 def get_all_trade_history():
    gmail = request.args.get('gmail')
-   print(gmail)
    user_detail = send_all_trade_history(gmail)
-   print(user_detail)
    return jsonify(user_detail)
 
 @app.route('/checkUserCredential', methods=['POST'])
@@ -151,6 +174,20 @@ def check_user_credential():
     
     received_data = request.get_json()
     response = check_user(received_data)
+    return jsonify(response)
+
+@app.route('/deleteBroker', methods=['POST'])
+def broker_delete():
+    received_data = request.get_json()
+    print(received_data)
+    response = mark_broker_false(received_data)
+    return jsonify(response)
+
+@app.route('/editBroker', methods=['POST'])
+def broker_edit():
+    received_data = request.get_json()
+    print(received_data)
+    response = update_broker(received_data)
     return jsonify(response)
  
 if __name__ == "__main__":  
