@@ -81,18 +81,22 @@ def send_all_trade_history(user_email):
     return list(user_collection.find({"gmail": user_email}, {"all_trade_history": 1, "_id" : 0}))
 
 def check_user(data):
+    
     user = user_collection.find_one({"$or": [{"username": data['username']}, {"gmail": data['username']}]})
-    print(user)
+    print(data['role'])
     if not user:
         return " Gmail is incorrect"
-    
-    # Check password
+
     if user["password"] != data['password']:
         return "Password is incorrect."
-    if data['role'] == 'user':
-        return user
+
+    elif data['role'] != 'admin':
+        return {
+            "message": "User logged in successfully.",
+            "user": user["gmail"],
+        }
     
-    return "Admin logged in successfully"
+    return "Admin logged in succssfully"
 
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
@@ -150,4 +154,4 @@ def check_user_credential():
     return jsonify(response)
  
 if __name__ == "__main__":  
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 6000)), debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
