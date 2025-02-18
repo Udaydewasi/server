@@ -39,6 +39,12 @@ def stored_user_info(data):
     
 def stored_broker_info(data):
     broker_name = data.get('broker')
+    gmail = data.get('gmail')
+    user_collection.update_one(
+        {"gmail": gmail, f"{broker_name}.visible": "false"},
+        {"$pull": {broker_name: {"visible": "false"}}}  # Remove only entries where visible is false
+    )
+
     info = {
         "phone":data.get("phone"),
         "pin":data.get('pin'),
@@ -50,13 +56,13 @@ def stored_broker_info(data):
     }
 
     user_collection.update_one(
-        {"gmail": data.get('gmail')},  # Match by email
+        {"gmail": gmail},
         {
-            "$push": {broker_name: info},  # Store broker info
-            "$addToSet": {"broker_list": broker_name}  # Store broker name in a list (avoid duplicates)
+            "$push": {broker_name: info},
+            "$addToSet": {"broker_list": broker_name}
         }
     )
-    return None
+    return {"success": True, "message": f"{broker_name} info updated"}
 
 def send_user_detail():
     return list(user_collection.find({}, {"username": 1, "gmail": 1 , "_id" : 0}))
@@ -127,6 +133,11 @@ def mark_broker_false(data):
 
     return {"success": True, "message": f"{broker_name} removed from broker_list"}
 
+# edit broker details fields
+def broker_edit(data):
+    return None
+    
+
 
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
@@ -141,7 +152,7 @@ def handle_admin_form():
 def handle_broker_form():
     
     received_data = request.get_json()
-    datas = copy.deepcopy(received_data) 
+    datas = copy.deepcopy(received_data)
     stored_broker_info(received_data)
     return jsonify(datas)
 
