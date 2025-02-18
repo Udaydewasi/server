@@ -81,7 +81,6 @@ def send_all_trade_history(user_email):
     return list(user_collection.find({"gmail": user_email}, {"all_trade_history": 1, "_id" : 0}))
 
 def check_user(data):
-    
     user = user_collection.find_one({"$or": [{"username": data['username']}, {"gmail": data['username']}]})
     print(user)
     if not user:
@@ -91,7 +90,9 @@ def check_user(data):
     if user["password"] != data['password']:
         return "Password is incorrect."
 
-    return "User logged in successfully."
+    return {"message": "User logged in successfully.",
+        "data": user.gmail
+    }
 
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
