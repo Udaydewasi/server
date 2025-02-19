@@ -71,6 +71,16 @@ def send_broker_form():
     document = broker_form_collection.find_one({}, {"_id": 0}) 
     return document
 
+def getBrokerDetails(data):
+    gmail = data.get('gmail')
+    broker = data.get('broker')
+
+    projection = {f"{broker}.trade_summary": 0, f"{broker}.visible": 0, "_id": 0}
+    user_data = user_collection.find_one({"gmail": gmail}, projection)
+    
+    return user_data[broker]
+    
+
 def send_trade_history(user_email):
     
     user_data = user_collection.find_one({"gmail": user_email}, {"broker_list": 1, "_id": 0})  
@@ -81,7 +91,7 @@ def send_trade_history(user_email):
     projection = {f"{broker}.trade_summary": 1 for broker in broker_list}  
     projection["_id"] = 0  # Exclude `_id`
     broker_details = user_collection.find_one({"gmail": user_email}, projection)    
-
+    print(broker_details)
     return broker_details
 
 def send_all_trade_history(user_email):
@@ -134,8 +144,20 @@ def mark_broker_false(data):
     return {"success": True, "message": f"{broker_name} removed from broker_list"}
 
 # edit broker details fields
-def broker_edit(data):
-    return None
+def update_broker(data):
+    gmail = data.get("gmail")
+    broker = data.get("broker")
+    print("hello")
+    print(gmail)
+    print(broker)
+    update_fields = {key: value for key, value in data.items() if key not in ["gmail", "broker", "visible"]}
+    print(update_fields)
+    result = user_collection.update_one(
+        {"gmail": gmail, f"{broker}.visible": "true"},
+        {"$set": {f"{broker}.$.{key}": value for key, value in update_fields.items()}}
+    )
+
+    return "Broker Information Updated Successfully."
     
 
 
@@ -152,7 +174,7 @@ def handle_admin_form():
 def handle_broker_form():
     
     received_data = request.get_json()
-    datas = copy.deepcopy(received_data)
+    datas = copy.deepcopy(received_data) 
     stored_broker_info(received_data)
     return jsonify(datas)
 
@@ -166,6 +188,14 @@ def get_user_detail():
 def get_broker_form():
     broker_form = send_broker_form()
     return broker_form
+
+@app.route('/get_broker_details', methods=['GET'])
+def BrokerDetails():
+    gmail = request.args.get("gmail")
+    broker = request.args.get("broker")
+    received_data = {"gmail": gmail, "broker": broker}
+    data = getBrokerDetails(received_data)
+    return data
 
 # user detail receiver for home page
 @app.route('/get_trade_history', methods=['GET'])
@@ -197,7 +227,6 @@ def broker_delete():
 @app.route('/editBroker', methods=['POST'])
 def broker_edit():
     received_data = request.get_json()
-    print(received_data)
     response = update_broker(received_data)
     return jsonify(response)
  
