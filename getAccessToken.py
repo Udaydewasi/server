@@ -5,7 +5,6 @@ import re
 import config
 from imap_tools import MailBox, A
 from bs4 import BeautifulSoup
-import config
 import re
 import time
 from datetime import date
