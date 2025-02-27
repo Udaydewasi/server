@@ -1,5 +1,6 @@
-from selenium.webdriver.common.by import By
-from seleniumbase import Driver
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import config
 from imap_tools import MailBox, A
 from bs4 import BeautifulSoup
