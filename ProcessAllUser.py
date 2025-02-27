@@ -13,8 +13,6 @@ def processAllUser():
         
         if "broker_list" in user:
             for broker in user["broker_list"]:
-                # broker_name = broker.get("name", "Unknown Broker")
-                print("broker name: ", broker)
                 get_live_data(user_id, broker)
 
 

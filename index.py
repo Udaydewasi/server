@@ -86,7 +86,6 @@ def getBrokerDetails(data):
     
 
 def send_trade_history(user_email):
-    print("yes this is")
     user_data = user_collection.find_one({"gmail": user_email}, {"broker_list": 1, "_id": 0})
     broker_list = user_data["broker_list"]  # Extract broker names
 
@@ -98,8 +97,7 @@ def send_trade_history(user_email):
     
     projection = {f"{broker}.trade_summary": 1 for broker in broker_list}  
     projection["_id"] = 0  # Exclude `_id`
-    broker_details = user_collection.find_one({"gmail": user_email}, projection)
-    print(broker_details)    
+    broker_details = user_collection.find_one({"gmail": user_email}, projection)  
     return broker_details
 
 def send_all_trade_history(user_email):
