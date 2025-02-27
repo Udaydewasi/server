@@ -1,6 +1,8 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+import chromedriver_autoinstaller
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from seleniumbase import Driver
+import os
 import config
 from imap_tools import MailBox, A
 from bs4 import BeautifulSoup
@@ -63,52 +65,58 @@ def get_otp(gmail_username, gmail_app_password, imap_server):
         print(f"An error occurred while fetching OTP: {e}")
         return None
 
-def generate_code (url, phone_no, password, gmail_username, gmail_app_password, imap_server):
+def generate_code(url, phone_no, password, gmail_username, gmail_app_password, imap_server):
+    # Install Chrome automatically
+    chromedriver_autoinstaller.install()
 
-    driver = Driver(uc=True)
+    # Setup Chrome Options
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run in headless mode
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+
+    # Use Seleniumbase Driver without 'options' (it doesn't support this)
+    driver = Driver(uc=True, headless=True)  
+
     try:
-        # Open the login page
-        url = url
         driver.uc_open_with_reconnect(url, 4)
         driver.uc_gui_click_captcha()
-    
-        time.sleep(2)  # Wait for the page to load
-    
-        # Locate and fill in the phone number field
+
+        time.sleep(2)
+
         phone_input = driver.find_element(By.ID, "mobileNum")
         phone_input.send_keys(phone_no)
         time.sleep(1)
-        # Click the 'Next' button
+
         next_button = driver.find_element(By.ID, "getOtp")
         next_button.click()
         print("next button")
-        time.sleep(2) 
-    
-        otp_input = driver.find_element(By.ID, "otpNum")  # Change ID as per the website
+        time.sleep(2)
+
+        otp_input = driver.find_element(By.ID, "otpNum")  
         otp = get_otp(gmail_username, gmail_app_password, imap_server) 
         otp_input.send_keys(otp)
-     
+
         enter_otp_button = driver.find_element(By.ID, "continueBtn")
         enter_otp_button.click()
-    
+
         time.sleep(2)
-    
-        # Locate and fill in the password field
+
         password_input = driver.find_element(By.ID, "pinCode")
         password_input.send_keys(password)
-    
+
         enter_pin_button = driver.find_element(By.ID, "pinContinueBtn")
         enter_pin_button.click()
-    
-        time.sleep(2)  # Wait for login to process
-    
+
+        time.sleep(2)  
+
         current_url = driver.current_url
         code = re.search(r"code=([^&]+)", current_url).group(1)
 
         return code
-       
+
     finally:
-        driver.quit()  # Close the browser
+        driver.quit()
 
 def get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmail_username, gmail_app_password, imap_server) :
     url = f'https://api.upstox.com/v2/login/authorization/dialog?response_type=code&client_id={api_key}&redirect_uri={redirect_uri}'
@@ -132,5 +140,5 @@ def get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmai
     access_token = response.json()['access_token']
     return access_token
   
-# acess_token = get_access_token("173b1d0a-5048-43d4-b23c-8cb1b413d676", "q756s0sih5", "http://localhost:3000", "9316443359", "310102", "vrajpatel0218@gmail.com", "uylm slxy cgqe qwkg", "imap.gmail.com")
-# print(acess_token)
+acess_token = get_access_token("173b1d0a-5048-43d4-b23c-8cb1b413d676", "q756s0sih5", "http://localhost:3000", "9316443359", "310102", "vrajpatel0218@gmail.com", "uylm slxy cgqe qwkg", "imap.gmail.com")
+print(acess_token)
