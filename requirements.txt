@@ -6,7 +6,6 @@ flask_cors
 selenium
 seleniumbase
 config
-bson
 imap-tools
 beautifulsoup4
 pandas

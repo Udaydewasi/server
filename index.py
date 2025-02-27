@@ -1,8 +1,7 @@
-from flask_cors import CORS
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 from pymongo import MongoClient
-import copy
 from bson.objectid import ObjectId
 import os
 from getTradeHistory import get_live_data
