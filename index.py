@@ -5,6 +5,7 @@ from pymongo import MongoClient
 import copy
 from bson.objectid import ObjectId
 import os
+from getTradeHistory import get_live_data
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://p-l-page.vercel.app", "http://localhost:3000"]}}, supports_credentials=True)
@@ -15,10 +16,7 @@ user_collection = db["users"]
 broker_form_collection = db['broker form']
     
 def stored_user_info(data):
-    print(data)
-
     if not isinstance(data, dict): 
-        print("Error: Data must be a dictionary")
         return {"error": "Invalid data format"}
 
     # Check if username or gmail already exists
@@ -34,7 +32,6 @@ def stored_user_info(data):
 
     # If no duplicates, insert new user
     user_collection.insert_one(data)
-    print("Data inserted successfully")
     return {"message": "User registered successfully"}
     
 def stored_broker_info(data):
@@ -52,7 +49,9 @@ def stored_broker_info(data):
         "secret_key": data.get('secret_key'),
         "redirect_uri": data.get('redirect_uri'),
         "gmail_apppassword": data.get('gmail_apppassword'),
-        "visible": "true"
+        "imap_server": data.get('imap_server'),
+        "visible": "true",
+        "trade_summary": []
     }
 
     user_collection.update_one(
@@ -62,6 +61,12 @@ def stored_broker_info(data):
             "$addToSet": {"broker_list": broker_name}
         }
     )
+
+    user = user_collection.find_one({"gmail": gmail})
+    user_id = user.get("_id")
+
+    get_live_data(user_id, broker_name)
+
     return {"success": True, "message": f"{broker_name} info updated"}
 
 def send_user_detail():
@@ -75,23 +80,27 @@ def getBrokerDetails(data):
     gmail = data.get('gmail')
     broker = data.get('broker')
 
-    projection = {f"{broker}.trade_summary": 0, f"{broker}.visible": 0, "_id": 0}
+    projection = {f"{broker}.trade_summary": 0, f"{broker}.visible": 0, f"{broker}.access_token": 0, "_id": 0}
     user_data = user_collection.find_one({"gmail": gmail}, projection)
     
     return user_data[broker]
     
 
 def send_trade_history(user_email):
-    
-    user_data = user_collection.find_one({"gmail": user_email}, {"broker_list": 1, "_id": 0})  
+    print("yes this is")
+    user_data = user_collection.find_one({"gmail": user_email}, {"broker_list": 1, "_id": 0})
+    broker_list = user_data["broker_list"]  # Extract broker names
+
     if not user_data or "broker_list" not in user_data:
+        return {"message": "No user data found for this user."}
+
+    if not broker_list:
         return {"message": "No brokers found for this user."}
     
-    broker_list = user_data["broker_list"]  # Extract broker names
     projection = {f"{broker}.trade_summary": 1 for broker in broker_list}  
     projection["_id"] = 0  # Exclude `_id`
-    broker_details = user_collection.find_one({"gmail": user_email}, projection)    
-    print(broker_details)
+    broker_details = user_collection.find_one({"gmail": user_email}, projection)
+    print(broker_details)    
     return broker_details
 
 def send_all_trade_history(user_email):
@@ -100,7 +109,6 @@ def send_all_trade_history(user_email):
 def check_user(data):
     
     user = user_collection.find_one({"$or": [{"username": data['username']}, {"gmail": data['username']}]})
-    print(data['role'])
     if not user:
         return " Gmail is incorrect"
 
@@ -147,11 +155,8 @@ def mark_broker_false(data):
 def update_broker(data):
     gmail = data.get("gmail")
     broker = data.get("broker")
-    print("hello")
-    print(gmail)
-    print(broker)
+    
     update_fields = {key: value for key, value in data.items() if key not in ["gmail", "broker", "visible"]}
-    print(update_fields)
     result = user_collection.update_one(
         {"gmail": gmail, f"{broker}.visible": "true"},
         {"$set": {f"{broker}.$.{key}": value for key, value in update_fields.items()}}
@@ -174,7 +179,7 @@ def handle_admin_form():
 def handle_broker_form():
     
     received_data = request.get_json()
-    datas = copy.deepcopy(received_data) 
+    datas = copy.deepcopy(received_data)
     stored_broker_info(received_data)
     return jsonify(datas)
 
@@ -220,7 +225,6 @@ def check_user_credential():
 @app.route('/deleteBroker', methods=['POST'])
 def broker_delete():
     received_data = request.get_json()
-    print(received_data)
     response = mark_broker_false(received_data)
     return jsonify(response)
 
