@@ -9,4 +9,4 @@ config
 imap-tools
 beautifulsoup4
 pandas
-chromedriver-autoinstaller
+chromedriver-autoinstaller 
