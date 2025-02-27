@@ -4,6 +4,7 @@ import requests
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
+import copy
 from getTradeHistory import get_live_data
 
 app = Flask(__name__)
