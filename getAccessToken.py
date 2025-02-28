@@ -1,3 +1,4 @@
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from seleniumbase import Driver
@@ -74,7 +75,7 @@ def generate_code (url, phone_no, password, gmail_username, gmail_app_password, 
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
 
-    driver = Driver(uc=True, options=chrome_options) 
+    driver = webdriver.Chrome(uc=True, options=chrome_options) 
     try:
         # Open the login page
         url = url
