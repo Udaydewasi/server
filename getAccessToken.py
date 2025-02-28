@@ -1,3 +1,4 @@
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from seleniumbase import Driver
 import time
@@ -67,7 +68,13 @@ def get_otp(gmail_username, gmail_app_password, imap_server):
 
 def generate_code (url, phone_no, password, gmail_username, gmail_app_password, imap_server):
 
-    driver = Driver(uc=True)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+
+    driver = Driver(uc=True, options=chrome_options) 
     try:
         # Open the login page
         url = url
