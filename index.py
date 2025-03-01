@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
 import copy
-from getTradeHistory import get_live_data
+# from getTradeHistory import get_live_data
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://p-l-page.vercel.app", "http://localhost:3000"]}}, supports_credentials=True)
@@ -65,7 +65,7 @@ def stored_broker_info(data):
     user = user_collection.find_one({"gmail": gmail})
     user_id = user.get("_id")
 
-    get_live_data(user_id, broker_name)
+    # get_live_data(user_id, broker_name)
 
     return {"success": True, "message": f"{broker_name} info updated"}
 
@@ -113,13 +113,20 @@ def check_user(data):
     if user["password"] != data['password']:
         return "Password is incorrect."
 
-    elif data['role'] != 'admin':
-        return {
-            "message": "User logged in successfully.",
-            "user": user["gmail"],
-        }
+    if user.get('role') != data['role']:
+        return {"error": "Unauthorized for this role"}, 403
     
-    return "Admin logged in succssfully"
+    user_data = {
+        "message": "Login successful",
+        "user": {
+            "id": str(user['_id']),
+            "username": user['username'],
+            "gmail": user['gmail'],
+            "role": user['role']
+        }
+    }
+    print(user_data)
+    return user_data, 200
 
 # mark invisble broker and delete the entry from brokerlist
 def mark_broker_false(data):
