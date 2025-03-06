@@ -3,12 +3,15 @@ from bson.objectid import ObjectId
 import requests
 from getAccessToken import get_access_token
 from database import stored_datas
+from datetime import datetime
 
-def get_live_data(user_id, broker_name):
+def get_live_data(user_id, broker_name, count):
     
     client = MongoClient("mongodb+srv://test-yt:DYYAQ8YZ2d1XrdTb@test.ced18.mongodb.net/")
     db = client["user_database"]
     collection = db["users"]
+    processDB = db["processCount"]
+    today_date = datetime.today().strftime('%Y-%m-%d')
     
     document_id = ObjectId(user_id)
     
@@ -52,8 +55,27 @@ def get_live_data(user_id, broker_name):
 
         trade_history = stored_datas(user_id, new_access_token)
 
+        #insert into database with user_id, date, count
+        processDB.update_one(
+            {"user_id": user_id},
+            {"$set": {f"{today_date}.count": count + 1, f"{today_date}.success": "true"}},
+            upsert=True
+        )
+
     except Exception as e:
         print(f"Error generating new access token: {str(e)}")
+        # if count > 3 then don't push
+            #push inside the database with user_id, date, count
+        #insert into .txt file with count+1
+        if count + 1 >= 3:
+            processDB.update_one(
+                {"user_id": user_id},
+                {"$set": {f"{today_date}.count": count + 1, f"{today_date}.success": "false"}},
+                upsert=True
+            )
+        else:
+            with open("pending.txt", "a") as file:
+                file.write(f"{user_id},{broker_name},{count + 1}\n")
         return None	
 	
 def is_token_active(access_token):

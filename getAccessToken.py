@@ -48,6 +48,18 @@ def get_otp(gmail_username, gmail_app_password, imap_server):
             for msg in messages:
                 msg_text += msg.html or msg.text  # Combine HTML or plain text parts
 
+            if not msg_text:
+                messages = mailbox.fetch(
+                    A(
+                        date_gte=date.today(),
+                        from_="noreply@upstox.com",
+                        subject="OTP to login",
+                    )
+                )
+            
+            for msg in messages:
+                msg_text += msg.html or msg.text
+
         if not msg_text:
             raise ValueError("No email message found.")
 
@@ -136,5 +148,5 @@ def get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmai
     access_token = response.json()['access_token']
     return access_token
   
-acess_token = get_access_token("173b1d0a-5048-43d4-b23c-8cb1b413d676", "q756s0sih5", "http://localhost:3000", "9316443359", "310102", "vrajpatel0218@gmail.com", "uylm slxy cgqe qwkg", "imap.gmail.com")
-print(acess_token)
+# acess_token = get_access_token("173b1d0a-5048-43d4-b23c-8cb1b413d676", "q756s0sih5", "http://localhost:3000", "9316443359", "310102", "vrajpatel0218@gmail.com", "uylm slxy cgqe qwkg", "imap.gmail.com")
+# print(acess_token)

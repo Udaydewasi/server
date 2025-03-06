@@ -29,8 +29,7 @@ def stored_user_info(data):
             return {"error": "Username already exists"}
         elif existing_user["gmail"] == data["gmail"]:
             return {"error": "Gmail already exists"}
-
-    # If no duplicates, insert new user
+            
     user_collection.insert_one(data)
     return {"message": "User registered successfully"}
     
@@ -65,12 +64,12 @@ def stored_broker_info(data):
     user = user_collection.find_one({"gmail": gmail})
     user_id = user.get("_id")
 
-    # get_live_data(user_id, broker_name)
+    get_live_data(user_id, broker_name, 0)
 
     return {"success": True, "message": f"{broker_name} info updated"}
 
 def send_user_detail():
-    return list(user_collection.find({}, {"username": 1, "gmail": 1 , "_id" : 0}))
+    return list(user_collection.find({"role": "user"}, {"username": 1, "gmail": 1 , "_id" : 0}))
 
 def send_broker_form():
     document = broker_form_collection.find_one({}, {"_id": 0}) 

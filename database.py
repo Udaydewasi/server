@@ -200,7 +200,7 @@ def get_all_financial_year_data(access_token ,starting_trading_date) :
     
 def stored_datas(user_id, access_token) :
     starting_trading_date = "01-01-2025"
-    get_all_financial_year_data(access_token, starting_trading_date) 
+    get_all_financial_year_data(access_token, starting_trading_date)
     aggregated_data = aggregate_trade_data(stored_trades)
     stored_data(user_id,aggregated_data)
     
