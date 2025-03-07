@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from getTradeHistory import get_live_data
 import os
+from datetime import datetime
 
 def processAllUser():
 
@@ -15,6 +16,8 @@ def processAllUser():
         if "broker_list" in user:
             for broker in user["broker_list"]:
                 get_live_data(user_id, broker, 0)
+                formatted_datetime = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                print("---------------------------------------------------------------------------",formatted_datetime)
 
 
 # Call the function to process all users
@@ -41,6 +44,9 @@ def processPendingUsers():
         
         user_id, broker_name, count = first_entry.split(",")
         get_live_data(user_id, broker_name, int(count))
+
+        formatted_datetime = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        print("---------------------------------------------------------------------------",formatted_datetime)
 
 
 processPendingUsers()
