@@ -11,7 +11,7 @@ def get_live_data(user_id, broker_name, count):
     db = client["user_database"]
     collection = db["users"]
     processDB = db["processCount"]
-    today_date = datetime.today().strftime('%Y-%m-%d')
+    today_date = datetime.today().strftime('%d-%m-%Y')
     
     document_id = ObjectId(user_id)
     

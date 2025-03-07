@@ -4,7 +4,13 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from pymongo import MongoClient
 stored_trades = []
+
+
+client = MongoClient("mongodb+srv://test-yt:DYYAQ8YZ2d1XrdTb@test.ced18.mongodb.net/")
+db = client["user_database"]
+user_collection = db["processCount"]
 
 def get_previous_day():
 
@@ -142,16 +148,11 @@ def stored_data(doc_id, aggregated_data) :
     # Assuming aggregated_data is a dictionary with dates as keys and trade details as values
     trade_summary_object = {date: details for date, details in aggregated_data.items()}
 
+    print("trade summary is :", trade_summary_object)
+
     collection.update_one(
-        {
-            "_id": ObjectId(doc_id)
-            # "upstox.trade_summary": {"$exists": True}
-        },
-        {
-            "$set": {
-                "upstox.$[].trade_summary": trade_summary_object
-            }
-        }
+        {"_id": ObjectId(doc_id)},
+        {"$set": {f"upstox.0.trade_summary.{date}": data for date, data in trade_summary_object.items()}}
     )
 
 
@@ -161,13 +162,13 @@ def get_all_financial_year_data(access_token ,starting_trading_date) :
     start_date, end_date, fy = get_financial_year_details(starting_trading_date)
     current_date_obj = datetime.strptime(current_date, "%d-%m-%Y")
     end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
+    start_date = starting_trading_date
 
     while current_date_obj > end_date_obj:
-    
             trade_count = get_page_count(access_token ,start_date, end_date, fy)
             page_number = trade_count / 500
             count = 0 
-    
+
             while count <= page_number :
                 count += 1
                 stored_data = get_data_function(access_token ,start_date, end_date, fy, count)
@@ -200,8 +201,16 @@ def get_all_financial_year_data(access_token ,starting_trading_date) :
     
 def stored_datas(user_id, access_token) :
     starting_trading_date = "01-01-2025"
+
+    data = user_collection.find_one({"user_id": user_id}, {"user_id": 0, "_id": 0})  
+    dates = {k: v for k, v in data.items() if v.get("success") == "true"}
+    print("user :", user_id)
+    print("dates :", dates)
+    if dates:
+        starting_trading_date = sorted(dates.keys(), reverse=True)[0]
+    print("start date is :", starting_trading_date)
     get_all_financial_year_data(access_token, starting_trading_date)
     aggregated_data = aggregate_trade_data(stored_trades)
     stored_data(user_id,aggregated_data)
     
-#stored_datas("eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyM0NGOFQiLCJqdGkiOiI2N2E5YmJjNWZlNWFjYTI2MDg2MTBlZDAiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaWF0IjoxNzM5MTc2OTAxLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3MzkyMjQ4MDB9.GZn8Uq31ndSRVCHeHoKFRcTkTZuWsfVKqr3zaqZVNic")
+#stored_datas("67ac64ba8bc3b42e6c7f5ef7","eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyM0NGOFQiLCJqdGkiOiI2N2NhODBmYzI1NDAwNjAzYWY0ODkwN2QiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaWF0IjoxNzQxMzI0NTQxLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3NDEzODQ4MDB9.-fOsx3BGaexTcMhtvtLPMFq71n84GdcfCj6D0wZu5Y0")
