@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
 import copy
-# from getTradeHistory import get_live_data
+from getTradeHistory import get_live_data
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://p-l-page.vercel.app", "http://localhost:3000"]}}, supports_credentials=True)
@@ -36,9 +36,9 @@ def stored_user_info(data):
 def stored_broker_info(data):
     broker_name = data.get('broker')
     gmail = data.get('gmail')
+
     user_collection.update_one(
-        {"gmail": gmail, f"{broker_name}.visible": "false"},
-        {"$pull": {broker_name: {"visible": "false"}}}  # Remove only entries where visible is false
+        {"gmail": gmail}, {"$unset": {broker_name: ""}}
     )
 
     info = {
@@ -50,7 +50,7 @@ def stored_broker_info(data):
         "gmail_apppassword": data.get('gmail_apppassword'),
         "imap_server": data.get('imap_server'),
         "visible": "true",
-        "trade_summary": []
+        "trade_summary": {}
     }
 
     user_collection.update_one(

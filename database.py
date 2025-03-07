@@ -162,7 +162,7 @@ def get_all_financial_year_data(access_token ,starting_trading_date) :
     start_date, end_date, fy = get_financial_year_details(starting_trading_date)
     current_date_obj = datetime.strptime(current_date, "%d-%m-%Y")
     end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
-    start_date = starting_trading_date
+    # start_date = starting_trading_date
 
     while current_date_obj > end_date_obj:
             trade_count = get_page_count(access_token ,start_date, end_date, fy)
@@ -202,12 +202,14 @@ def get_all_financial_year_data(access_token ,starting_trading_date) :
 def stored_datas(user_id, access_token) :
     starting_trading_date = "01-01-2025"
 
-    data = user_collection.find_one({"user_id": user_id}, {"user_id": 0, "_id": 0})  
-    dates = {k: v for k, v in data.items() if v.get("success") == "true"}
-    print("user :", user_id)
-    print("dates :", dates)
-    if dates:
-        starting_trading_date = sorted(dates.keys(), reverse=True)[0]
+    data = user_collection.find_one({"user_id": user_id}, {"user_id": 0, "_id": 0})
+    if data:  
+        dates = {k: v for k, v in data.items() if v.get("success") == "true"}
+        print("dates", dates)
+        if dates:
+            starting_trading_date = sorted(dates.keys(), reverse=True)[0]
+
+    print("user :", user_id)    
     print("start date is :", starting_trading_date)
     get_all_financial_year_data(access_token, starting_trading_date)
     aggregated_data = aggregate_trade_data(stored_trades)
