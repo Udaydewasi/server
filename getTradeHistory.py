@@ -40,7 +40,7 @@ def get_live_data(user_id, broker_name, count):
         gmail_app_password = broker_data.get('gmail_apppassword')
         imap_server = broker_data.get('imap_server')
         
-        new_access_token = get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmail_username, gmail_app_password, imap_server)
+        new_access_token = get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmail_username, gmail_app_password, imap_server)["code"]
         
         if new_access_token:
             collection.update_one(

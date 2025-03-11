@@ -90,7 +90,7 @@ def generate_code(url, phone_no, password, gmail_username, gmail_app_password, i
         # Step 1: Enter phone number
         try:
             print(phone_no)
-            phone_input = WebDriverWait(driver, 3, poll_frequency=5).until(
+            phone_input = WebDriverWait(driver, 300, poll_frequency=5).until(
                 EC.visibility_of_element_located((By.ID, "mobileNum"))
             )
             phone_input.send_keys(phone_no)
@@ -99,7 +99,7 @@ def generate_code(url, phone_no, password, gmail_username, gmail_app_password, i
 
         # Step 2: Click 'Next' button
         try:
-            next_button = WebDriverWait(driver, 3, poll_frequency=5).until(
+            next_button = WebDriverWait(driver, 300, poll_frequency=5).until(
                 EC.element_to_be_clickable((By.ID, "getOtp"))
             )
             next_button.click()
@@ -176,7 +176,8 @@ def get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmai
     if response["status"] == "success":
         code = response["code"]
     else:
-        return response
+        return response["message"]
+
 
     url = 'https://api.upstox.com/v2/login/authorization/token'
     headers = {
@@ -195,7 +196,7 @@ def get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmai
     response = requests.post(url, headers=headers, data=data)
     access_token = response.json()['access_token']
     print("access token generated successfully", access_token)
-    return {"status": "success", "code": access_token, "message": "Access Token Successfully generated"}
+    return {"status": "success", "code": access_token}
 
-# acess_token = get_access_token("173b1d0a-5048-43d4-b23c-8cb1b413d676", "q756s0sih5", "http://localhost:3000", "9316443359", "310102", "vrajpatel0218@gmail.com", "uylm slxy cgqe qwkg", "imap.gmail.com")
+# acess_token = get_access_token("173b1d0a-5048-43d4-b23c-8cb1b413d67", "q756s0sih5", "http://localhost:3000", "9316443359", "310102", "vrajpatel0218@gmail.com", "uylm slxy cgqe qwkg", "imap.gmail.com")
 # print(acess_token)

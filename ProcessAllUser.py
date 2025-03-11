@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from getTradeHistory import get_live_data
 import os
 from datetime import datetime
+import time
 
 def processAllUser():
 
@@ -18,7 +19,7 @@ def processAllUser():
                 get_live_data(user_id, broker, 0)
                 formatted_datetime = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                 print("---------------------------------------------------------------------------",formatted_datetime)
-
+                # time.sleep(60)
 
 # Call the function to process all users
 processAllUser()
@@ -47,6 +48,6 @@ def processPendingUsers():
 
         formatted_datetime = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         print("---------------------------------------------------------------------------",formatted_datetime)
-
+        # time.sleep(60)
 
 processPendingUsers()

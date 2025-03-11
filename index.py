@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
 import copy
-from getTradeHistory import get_live_data
+from getAccessToken import get_access_token
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://p-l-page.vercel.app", "http://localhost:3000"]}}, supports_credentials=True)
@@ -50,6 +50,7 @@ def stored_broker_info(data):
         "gmail_apppassword": data.get('gmail_apppassword'),
         "imap_server": data.get('imap_server'),
         "visible": "true",
+        "tested": "false",
         "trade_summary": {}
     }
 
@@ -60,11 +61,6 @@ def stored_broker_info(data):
             "$addToSet": {"broker_list": broker_name}
         }
     )
-
-    user = user_collection.find_one({"gmail": gmail})
-    user_id = user.get("_id")
-
-    get_live_data(user_id, broker_name, 0)
 
     return {"success": True, "message": f"{broker_name} info updated"}
 
@@ -124,7 +120,6 @@ def check_user(data):
             "role": user['role']
         }
     }
-    print(user_data)
     return user_data, 200
 
 # mark invisble broker and delete the entry from brokerlist
@@ -168,7 +163,37 @@ def update_broker(data):
 
     return "Broker Information Updated Successfully."
     
+# test the broker details are working
+def broker_testing(gmail, broker):
+    user = user_collection.find_one({'gmail': gmail})
+    broker_data = user[broker][0]
+    
+    api_key = broker_data.get('api_key')
+    secret_key = broker_data.get('secret_key')
+    redirect_uri = broker_data.get('redirect_uri')
+    phone_no = broker_data.get('phone')
+    password = broker_data.get('pin')
+    gmail_username = gmail
+    gmail_app_password = broker_data.get('gmail_apppassword')
+    imap_server = broker_data.get('imap_server')
 
+    response = get_access_token(api_key, secret_key, redirect_uri, phone_no, password, gmail_username, gmail_app_password, imap_server)
+
+    if response["status"] == "success":
+        user_collection.update_one({"gmail": gmail},
+            {"$set": {f"{broker}.0.tested": "true"}}
+        )
+
+    return response
+
+
+def status_test(gmail, broker):
+    user = user_collection.find_one({"gmail": gmail},{f"{broker}.tested": 1, "_id": 0})
+    
+    if user and broker in user and len(user[broker]) > 0:
+        return user[broker][0]["tested"]
+    
+    return None
 
 # admin form receiver
 @app.route('/createUserForm', methods=['POST'])
@@ -237,6 +262,21 @@ def broker_edit():
     received_data = request.get_json()
     response = update_broker(received_data)
     return jsonify(response)
+
+@app.route('/testbroker', methods=['GET'])
+def broker_test():
+    gmail = request.args.get('gmail')
+    broker = request.args.get('broker')
+    response = broker_testing(gmail, broker)
+    return jsonify(response)
  
+
+@app.route('/teststatus', methods=['GET'])
+def test_status():
+    gmail = request.args.get('gmail')
+    broker = request.args.get('broker')
+    response = status_test(gmail, broker)
+    return jsonify(response)
+
 if __name__ == "__main__":  
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
